@@ -1,0 +1,176 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import java.util.Random;
+
+public class SnakeGame extends JPanel implements KeyListener, ActionListener {
+    private int[] snakeX = new int[750];
+    private int[] snakeY = new int[750];
+    private int length;
+    private int foodX;
+    private int foodY;
+    private int direction;
+    private boolean running = false;
+    private boolean gameover = false;
+    private Timer timer;
+    private Random random;
+
+    public SnakeGame() {
+        addKeyListener(this);
+        setFocusable(true);
+        setFocusTraversalKeysEnabled(false);
+        timer = new Timer(100, this);
+        random = new Random();
+        startGame();
+    }
+
+    public void startGame() {
+        length = 3;
+        direction = 1;
+        snakeX[0] = 100;
+        snakeY[0] = 100;
+        snakeX[1] = 75;
+        snakeY[1] = 100;
+        snakeX[2] = 50;
+        snakeY[2] = 100;
+        placeFood();
+        running = true;
+        gameover = false;
+        timer.start();
+    }
+
+    public void placeFood() {
+        foodX = random.nextInt(34) * 25;
+        foodY = random.nextInt(24) * 25;
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        draw(g);
+    }
+
+    public void draw(Graphics g) {
+        if (running) {
+            // Draw the game board
+            g.setColor(Color.black);
+            g.fillRect(0, 0, 850, 625);
+
+            // Draw the snake
+            for (int i = 0; i < length; i++) {
+                if (i == 0) {
+                    g.setColor(Color.green);
+                    g.fillRect(snakeX[i], snakeY[i], 25, 25);
+                } else {
+                    g.setColor(Color.green);
+                    g.fillRect(snakeX[i], snakeY[i], 25, 25);
+                }
+            }
+
+            // Draw the food
+            g.setColor(Color.red);
+            g.fillOval(foodX, foodY, 25, 25);
+
+            // Display the score
+            g.setColor(Color.white);
+            g.setFont(new Font("Arial", Font.PLAIN, 20));
+            g.drawString("Score: " + (length - 3), 700, 30);
+        } else {
+            // Game over screen
+            g.setColor(Color.black);
+            g.fillRect(0, 0, 850, 625);
+            g.setColor(Color.red);
+            g.setFont(new Font("Arial", Font.PLAIN, 50));
+            g.drawString("Game Over", 330, 300);
+            g.setFont(new Font("Arial", Font.PLAIN, 20));
+            g.drawString("Press SPACE to Play Again", 350, 350);
+        }
+    }
+
+    public void move() {
+        for (int i = length; i > 0; i--) {
+            snakeX[i] = snakeX[i - 1];
+            snakeY[i] = snakeY[i - 1];
+        }
+
+        switch (direction) {
+            case 0:
+                snakeY[0] -= 25;
+                break;
+            case 1:
+                snakeX[0] += 25;
+                break;
+            case 2:
+                snakeY[0] += 25;
+                break;
+            case 3:
+                snakeX[0] -= 25;
+                break;
+        }
+
+        // Check for collision with the food
+        if (snakeX[0] == foodX && snakeY[0] == foodY) {
+            length++;
+            placeFood();
+        }
+
+        // Check for collision with the borders or itself
+        if (snakeX[0] >= 850 || snakeX[0] < 25 || snakeY[0] >= 625 || snakeY[0] < 25 || collision()) {
+            running = false;
+            gameover = true;
+        }
+    }
+
+    public boolean collision() {
+        for (int i = 1; i < length; i++) {
+            if (snakeX[0] == snakeX[i] && snakeY[0] == snakeY[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (running) {
+            move();
+        }
+        repaint();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int key = e.getKeyCode();
+        if (key == KeyEvent.VK_SPACE && gameover) {
+            startGame();
+        }
+        if (key == KeyEvent.VK_UP && direction != 2) {
+            direction = 0;
+        }
+        if (key == KeyEvent.VK_RIGHT && direction != 3) {
+            direction = 1;
+        }
+        if (key == KeyEvent.VK_DOWN && direction != 0) {
+            direction = 2;
+        }
+        if (key == KeyEvent.VK_LEFT && direction != 1) {
+            direction = 3;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Snake Game");
+        SnakeGame game = new SnakeGame();
+        frame.add(game);
+        frame.setSize(850, 625);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+}
